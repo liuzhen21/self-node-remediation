@@ -25,6 +25,8 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 
+	"encoding/json"
+
 	v1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
@@ -67,6 +69,8 @@ var (
 		Value:  "nodeshutdown",
 		Effect: v1.TaintEffectNoExecute,
 	}
+
+	VirtHandlerHeartbeat string = "kubevirt.io/heartbeat"
 
 	lastSeenSnrNamespace  string
 	wasLastSeenSnrMachine bool
@@ -466,10 +470,38 @@ func (r *SelfNodeRemediationReconciler) handleRebootCompletedPhase(node *v1.Node
 		return ctrl.Result{RequeueAfter: waitTime}, nil
 	}
 
+	if apiErrors.IsConflict(r.FakeVirtHeartbeat(snr)) {
+		return ctrl.Result{RequeueAfter: time.Second}, nil
+	}
 	fencingCompleted := string(fencingCompletedPhase)
 	snr.Status.Phase = &fencingCompleted
 
 	return ctrl.Result{}, r.updateConditions(remediationFinished, snr)
+}
+
+func (r *SelfNodeRemediationReconciler) FakeVirtHeartbeat(snr *v1alpha1.SelfNodeRemediation) error {
+
+	r.logger.Info("resource deleted, fake kubevirt heartbeart")
+	node, err := r.getNodeFromSnr(snr)
+	if err != nil {
+		r.logger.Error(err, "failed to get node", "node name", snr.Name)
+		return err
+	}
+	timeout := 5 * time.Minute
+
+	if lastHeartBeat, exists := node.Annotations[VirtHandlerHeartbeat]; exists {
+		timestamp := metav1.Time{}
+		if err := json.Unmarshal([]byte(`"`+lastHeartBeat+`"`), &timestamp); err != nil {
+			return err
+		}
+		if timestamp.Time.After(metav1.Now().Add(-timeout)) {
+			node.Annotations[VirtHandlerHeartbeat] = time.Now().Add(-timeout).Format("2006-01-02T15:04:05Z")
+			if err := r.Client.Update(context.Background(), node); err != nil {
+				return err
+			}
+		}
+	}
+	return err
 }
 
 func (r *SelfNodeRemediationReconciler) handleFencingCompletedPhase(node *v1.Node, snr *v1alpha1.SelfNodeRemediation) (ctrl.Result, error) {

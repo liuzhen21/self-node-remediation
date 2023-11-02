@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/go-logr/logr"
 
@@ -126,9 +127,10 @@ func (r *SelfNodeRemediationConfigReconciler) syncConfigDaemonSet(ctx context.Co
 	if timeToAssumeNodeRebooted == 0 {
 		timeToAssumeNodeRebooted = 180
 	}
-	data.Data["TimeToAssumeNodeRebooted"] = fmt.Sprintf("\"%d\"", timeToAssumeNodeRebooted)
+	data.Data["TimeToAssumeNodeRebooted"] = fmt.Sprintf("\"%d\"", timeToAssumeNodeRebooted*int(time.Second))
 
 	data.Data["IsSoftwareRebootEnabled"] = fmt.Sprintf("\"%t\"", snrConfig.Spec.IsSoftwareRebootEnabled)
+	data.Data["IsRebootDisabled"] = fmt.Sprintf("\"%t\"", snrConfig.Spec.IsRebootDisabled)
 
 	objs, err := render.Dir(r.InstallFileFolder, &data)
 	if err != nil {

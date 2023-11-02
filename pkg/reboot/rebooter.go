@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-logr/logr"
 
+	"github.com/medik8s/self-node-remediation/pkg/utils"
 	"github.com/medik8s/self-node-remediation/pkg/watchdog"
 )
 
@@ -46,6 +47,14 @@ func (r *watchdogRebooter) GetTimeToAssumeNodeRebooted() time.Duration {
 }
 
 func (r *watchdogRebooter) Reboot() error {
+	disableReboot, err := utils.IsRebootDisabled()
+	if err != nil {
+		r.log.Error(err, "get disableReboot error")
+	}
+	if disableReboot {
+		return nil
+	}
+
 	if r.wd == nil {
 		r.log.Info("no watchdog is present on this host, trying software reboot")
 		//we couldn't init a watchdog so far but requested to be rebooted. we issue a software reboot

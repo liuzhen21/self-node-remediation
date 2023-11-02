@@ -1,18 +1,12 @@
 # Build the manager binary
-FROM quay.io/centos/centos:stream8 AS builder
-RUN yum install golang -y && yum clean all
 
-# Ensure correct Go version
-ENV GO_VERSION=1.20
-RUN go install golang.org/dl/go${GO_VERSION}@latest
-RUN ~/go/bin/go${GO_VERSION} download
-RUN /bin/cp -f ~/go/bin/go${GO_VERSION} /usr/bin/go
-RUN go version
 
+FROM golang:1.20 AS builder
 WORKDIR /workspace
 # Copy the Go Modules manifests
 COPY go.mod go.mod
 COPY go.sum go.sum
+ENV GOPROXY=https://goproxy.cn,direct
 # cache deps before building and copying source so that we don't need to re-download as much
 # and so that source changes don't invalidate our downloaded layer
 RUN go mod download

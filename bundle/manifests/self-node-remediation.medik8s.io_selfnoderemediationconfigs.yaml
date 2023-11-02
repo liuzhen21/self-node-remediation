@@ -109,6 +109,11 @@ spec:
                   agent will do software reboot, if the watchdog device can not be
                   used or will use watchdog only, without a fallback to software reboot
                 type: boolean
+              isRebootDisabled:
+                default: false
+                description: IsRebootDisabled indicates whether self node remediation
+                  agent will do reboot
+                type: boolean
               maxApiErrorThreshold:
                 default: 3
                 description: after this threshold, the node will start contacting

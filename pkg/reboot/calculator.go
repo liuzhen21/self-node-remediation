@@ -53,9 +53,11 @@ func NewSafeTimeCalculator(k8sClient client.Client, wd watchdog.Watchdog, maxErr
 
 func (s *safeTimeCalculator) GetTimeToAssumeNodeRebooted() time.Duration {
 	s.calcMinTimeAssumeRebooted()
-	if s.timeToAssumeNodeRebooted < s.minTimeToAssumeNodeRebooted {
-		return s.minTimeToAssumeNodeRebooted
-	}
+	/*
+		if s.timeToAssumeNodeRebooted < s.minTimeToAssumeNodeRebooted {
+			return s.minTimeToAssumeNodeRebooted
+		}
+	*/
 	return s.timeToAssumeNodeRebooted
 }
 

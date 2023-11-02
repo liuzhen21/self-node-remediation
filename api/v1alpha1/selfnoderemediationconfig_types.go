@@ -109,6 +109,10 @@ type SelfNodeRemediationConfigSpec struct {
 	// +kubebuilder:default=true
 	IsSoftwareRebootEnabled bool `json:"isSoftwareRebootEnabled,omitempty"`
 
+	// IsRebootDisabled indicates whether self node remediation agent will do reboot
+	// +kubebuilder:default=false
+	IsRebootDisabled bool `json:"isRebootDisabled,omitempty"`
+
 	// EndpointHealthCheckUrl is an url that self node remediation agents which run on control-plane node will try to access when they can't contact their peers.
 	// This is a part of self diagnostics which will decide whether the node should be remediated or not.
 	// It will be ignored when empty (which is the default).
